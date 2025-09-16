@@ -1,0 +1,37 @@
+# Build artifacts
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# DotNet Core
+*.dll
+*.exe
+*.log
+*.pdb
+*.cache
+*.ilk
+*.meta
+*.iobj
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Others
+*.dbmdl
+*.bak
