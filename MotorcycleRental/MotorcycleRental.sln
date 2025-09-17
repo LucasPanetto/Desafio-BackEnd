@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36414.22 d17.14
+VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotorcycleRental.Api", "MotorcycleRental.Api\MotorcycleRental.Api.csproj", "{FFFABABB-01DD-482E-8FA4-58583D3C1721}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotorcycleRental.Infrastructure", "MotorcycleRental.Infrastructure\MotorcycleRental.Infrastructure.csproj", "{05443208-C9B4-4876-BD23-6B7A936D84D0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotorcycleRental.Application", "MotorcycleRental.Application\MotorcycleRental.Application.csproj", "{7D354FE5-ED0C-4AFA-B3BF-B28F3A41356A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotorcycleRental.Consumer", "MotorcycleRental.Consumer\MotorcycleRental.Consumer.csproj", "{C95AB8F0-E56D-4DA5-A40A-2B387444E041}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{7D354FE5-ED0C-4AFA-B3BF-B28F3A41356A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D354FE5-ED0C-4AFA-B3BF-B28F3A41356A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D354FE5-ED0C-4AFA-B3BF-B28F3A41356A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C95AB8F0-E56D-4DA5-A40A-2B387444E041}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C95AB8F0-E56D-4DA5-A40A-2B387444E041}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C95AB8F0-E56D-4DA5-A40A-2B387444E041}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C95AB8F0-E56D-4DA5-A40A-2B387444E041}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
