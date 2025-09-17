@@ -41,7 +41,7 @@ namespace MotorcycleRental.Api.Controllers
         }
 
         /// <summary>
-        /// Obter motos (filtro opcional por placa)
+        /// Obter motos por id
         /// </summary>
         /// <param name="plate">Filtro por placa</param>
         [HttpGet("{id}")]
