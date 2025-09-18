@@ -9,13 +9,10 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Detecta se está rodando dentro do container
 var isDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
 
-// Configura URLs
 builder.WebHost.UseUrls(isDocker ? "http://+:5000" : "http://+:5000;https://+:5001");
 
-// Controllers
 builder.Services.AddControllers();
 
 // Swagger
