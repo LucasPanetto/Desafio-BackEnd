@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+﻿using MotorcycleRental.Infrastructure.Interfaces;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using System.Text;
@@ -12,41 +12,14 @@ namespace MotorcycleRental.Infrastructure.Messaging
         private IModel? _channel;
         private readonly RabbitMqOptions _options;
 
-        public RabbitMqMessageBus(IOptions<RabbitMqOptions> options)
+        public RabbitMqMessageBus(RabbitMqOptions options)
         {
-            _options = options.Value;
-        }
+            _options = options;
 
-
-        public Task PublishAsync(string queueName, object message)
-        {
-            try
-            {
-                EnsureConnection();
-
-                _channel!.QueueDeclare(queue: queueName,
-                                     durable: true,
-                                     exclusive: false,
-                                     autoDelete: false,
-                                     arguments: null);
-
-                var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
-                _channel.BasicPublish(exchange: "",
-                                     routingKey: queueName,
-                                     basicProperties: null,
-                                     body: body);
-            }
-            catch (BrokerUnreachableException ex)
-            {
-                // RabbitMQ não está acessível, apenas loga e segue
-                Console.WriteLine($"[WARN] RabbitMQ indisponível: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERRO] Falha ao publicar mensagem: {ex.Message}");
-            }
-
-            return Task.CompletedTask;
+            Console.WriteLine($"RabbitMQ HostName: {_options.HostName}"); // Deve mostrar rabbitmq
+            Console.WriteLine($"RabbitMQ QueueName: {_options.QueueName}");
+            Console.WriteLine($"RabbitMQ UserName: {_options.UserName}");
+            Console.WriteLine($"RabbitMQ Password: {_options.Password}");
         }
 
         private void EnsureConnection()
@@ -58,11 +31,48 @@ namespace MotorcycleRental.Infrastructure.Messaging
             {
                 HostName = _options.HostName,
                 UserName = _options.UserName,
-                Password = _options.Password
+                Password = _options.Password,
+                Port = _options.Port
             };
 
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
+
+            // Declara a fila
+            _channel.QueueDeclare(
+                queue: _options.QueueName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null
+            );
+
+            // Configura prefetch
+            _channel.BasicQos(0, _options.PrefetchCount, false);
+        }
+
+        public Task PublishAsync(string queueName, object message)
+        {
+            try
+            {
+                EnsureConnection();
+
+                var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+                _channel!.BasicPublish(exchange: "",
+                                      routingKey: queueName,
+                                      basicProperties: null,
+                                      body: body);
+            }
+            catch (BrokerUnreachableException ex)
+            {
+                Console.WriteLine($"[WARN] RabbitMQ indisponível: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERRO] Falha ao publicar mensagem: {ex.Message}");
+            }
+
+            return Task.CompletedTask;
         }
 
         public void Dispose()

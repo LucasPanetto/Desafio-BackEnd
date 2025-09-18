@@ -20,49 +20,70 @@ namespace MotorcycleRental.Consumer
         public MotorcycleCreatedConsumer(
             IOptions<RabbitMqOptions> options,
             ILogger<MotorcycleCreatedConsumer> logger,
-            IServiceScopeFactory scopeFactory) 
+            IServiceScopeFactory scopeFactory)
         {
             _options = options.Value;
             _logger = logger;
             _scopeFactory = scopeFactory;
 
-            try
-            {
-                InitializeRabbitMq();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning("Não foi possível conectar ao RabbitMQ: {Message}. O consumidor continuará em modo offline.", ex.Message);
-                _connection = null;
-                _channel = null;
-            }
+            InitializeRabbitMqWithRetry();
         }
 
-        private void InitializeRabbitMq()
+        private void InitializeRabbitMqWithRetry()
         {
+            var hostName = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? _options.HostName ?? "localhost";
+            var port = int.TryParse(Environment.GetEnvironmentVariable("RABBITMQ_PORT"), out var envPort) ? envPort : _options.Port;
+            var userName = Environment.GetEnvironmentVariable("RABBITMQ_USERNAME") ?? _options.UserName ?? "guest";
+            var password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD") ?? _options.Password ?? "guest";
+            var queueName = Environment.GetEnvironmentVariable("RABBITMQ_QUEUENAME") ?? _options.QueueName ?? "guest";
+
             var factory = new ConnectionFactory
             {
-                HostName = _options.HostName,
-                UserName = _options.UserName,
-                Port = _options.Port,
-                Password = _options.Password,
+                HostName = hostName,
+                Port = port,
+                UserName = userName,
+                Password = password,
                 DispatchConsumersAsync = true
             };
 
-            _connection = factory.CreateConnection();
-            _channel = _connection.CreateModel();
+            int attempts = 0;
+            const int maxAttempts = 10;
+            const int delayMs = 3000;
 
-            _channel.QueueDeclare(queue: _options.QueueName,
-                                  durable: true,
-                                  exclusive: false,
-                                  autoDelete: false,
-                                  arguments: null);
+            while (attempts < maxAttempts)
+            {
+                try
+                {
+                    _connection = factory.CreateConnection();
+                    _channel = _connection.CreateModel();
 
-            _channel.BasicQos(0, _options.PrefetchCount, false);
+                    _channel.QueueDeclare(
+                        queue: queueName,
+                        durable: true,
+                        exclusive: false,
+                        autoDelete: false,
+                        arguments: null);
+
+                    _channel.BasicQos(0, _options.PrefetchCount, false);
+
+                    _logger.LogInformation("Conectado ao RabbitMQ em {Host}:{Port}", hostName, port);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    attempts++;
+                    _logger.LogWarning("Falha ao conectar RabbitMQ (tentativa {Attempt}/{MaxAttempts}): {Message}", attempts, maxAttempts, ex.Message);
+                    Thread.Sleep(delayMs);
+                }
+            }
+
+            _logger.LogError("Não foi possível conectar ao RabbitMQ após {MaxAttempts} tentativas.", maxAttempts);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var queueName = Environment.GetEnvironmentVariable("RABBITMQ_QUEUENAME") ?? _options.QueueName ?? "motorcycle.created";
+
             if (_channel == null)
             {
                 _logger.LogWarning("RabbitMQ não disponível. Nenhuma mensagem será consumida.");
@@ -72,7 +93,7 @@ namespace MotorcycleRental.Consumer
             var consumer = new AsyncEventingBasicConsumer(_channel);
             consumer.Received += async (model, ea) =>
             {
-                using var scope = _scopeFactory.CreateScope(); // cria scope para cada mensagem
+                using var scope = _scopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<NotifyDbContext>();
 
                 try
@@ -87,21 +108,23 @@ namespace MotorcycleRental.Consumer
                     var modelName = message.GetProperty("Model").GetString();
                     var year = message.GetProperty("Year").GetInt32();
 
-                    _logger.LogInformation("Moto recebida: {Model} - {Plate} ({Id}) - {Year}",
-                        modelName, plate, id, year);
-
-                    // Inserção otimizada no banco
-                    var notify = new Notify
+                    if(year == 2024)
                     {
-                        Id = id,
-                        Model = modelName,
-                        Plate = plate,
-                        Year = year,
-                        CreatedAt = DateTime.UtcNow
-                    };
+                        _logger.LogInformation("Moto recebida: {Model} - {Plate} ({Id}) - {Year}", modelName, plate, id, year);
 
-                    dbContext.Notify.Add(notify);
-                    await dbContext.SaveChangesAsync(stoppingToken);
+                        var notify = new Notify
+                        {
+                            Id = id,
+                            Model = modelName,
+                            Plate = plate,
+                            Year = year,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        dbContext.Notify.Add(notify);
+                        await dbContext.SaveChangesAsync(stoppingToken);
+                    }
+                    
 
                     _channel.BasicAck(ea.DeliveryTag, false);
                 }
@@ -112,7 +135,7 @@ namespace MotorcycleRental.Consumer
                 }
             };
 
-            _channel.BasicConsume(queue: _options.QueueName, autoAck: false, consumer: consumer);
+            _channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
 
             return Task.CompletedTask;
         }

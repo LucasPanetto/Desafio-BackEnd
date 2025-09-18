@@ -1,0 +1,61 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    container_name: motorcycle_rental_db
+    environment:
+      POSTGRES_DB: MotorcycleRentalDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: motorcycle_rental_rabbit
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  api:
+    container_name: motorcycle_rental_api
+    build:
+      context: .
+      dockerfile: MotorcycleRental/MotorcycleRental.Api/Dockerfile
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+      - DEFAULT_CONNECTION=Host=db;Port=5432;Database=MotorcycleRentalDb;Username=postgres;Password=postgres
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+      - ASPNETCORE_ENVIRONMENT=Development
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_QUEUENAME=motorcycle.created
+      - RABBITMQ_PREFETCH=1
+
+  consumer:
+    container_name: motorcycle_rental_consumer
+    build:
+      context: .
+      dockerfile: MotorcycleRental/MotorcycleRental.Consumer/Dockerfile
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+      - DEFAULT_CONNECTION=Host=db;Port=5432;Database=MotorcycleRentalDb;Username=postgres;Password=postgres
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_QUEUENAME=motorcycle.created

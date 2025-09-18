@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotorcycleRental.Applicatio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotorcycleRental.Consumer", "MotorcycleRental.Consumer\MotorcycleRental.Consumer.csproj", "{C95AB8F0-E56D-4DA5-A40A-2B387444E041}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotorcycleRental.UnitTests", "MotorcycleRental.UnitTests\MotorcycleRental.UnitTests.csproj", "{C002F34D-6768-4748-9162-31B26F099C16}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{C95AB8F0-E56D-4DA5-A40A-2B387444E041}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C95AB8F0-E56D-4DA5-A40A-2B387444E041}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C95AB8F0-E56D-4DA5-A40A-2B387444E041}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C002F34D-6768-4748-9162-31B26F099C16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C002F34D-6768-4748-9162-31B26F099C16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C002F34D-6768-4748-9162-31B26F099C16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C002F34D-6768-4748-9162-31B26F099C16}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

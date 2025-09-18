@@ -59,6 +59,12 @@ namespace MotorcycleRental.Application.Handlers.DeliveryMan
 
         private async Task ValidateData(CreateRentalCommand request)
         {
+            var rental = await _rentalRepository.GetByMotorcycleIdAsync(request.MotorcycleId);
+            if (rental != null)
+            {
+                throw new ValidationException("Moto ja alugada.");
+            }
+
             var deliveryMan = await _repositoryDeliveryMan.GetByIdAsync(request.DeliveryManId)
                               ?? throw new KeyNotFoundException($"Entregador não encontrado: {request.DeliveryManId}.");
 
